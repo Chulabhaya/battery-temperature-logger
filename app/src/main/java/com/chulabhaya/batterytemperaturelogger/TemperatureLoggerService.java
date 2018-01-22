@@ -92,15 +92,7 @@ public class TemperatureLoggerService extends Service{
         return voltage;
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    private double getBatteryCurrent(){
-        Intent intent = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-        BatteryManager bm = (BatteryManager)context.getSystemService(context.BATTERY_SERVICE);
-        double current = (double)bm.getIntProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW);
-        return current;
-    }
-
-    private float readUsage() {
+    private float getCPULoad() {
         try {
             RandomAccessFile reader = new RandomAccessFile("/proc/stat", "r");
             String load = reader.readLine();
@@ -112,7 +104,7 @@ public class TemperatureLoggerService extends Service{
                     + Long.parseLong(toks[6]) + Long.parseLong(toks[7]) + Long.parseLong(toks[8]);
 
             try {
-                Thread.sleep(360);
+                Thread.sleep(500);
             } catch (Exception e) {}
 
             reader.seek(0);
@@ -125,11 +117,13 @@ public class TemperatureLoggerService extends Service{
             long cpu2 = Long.parseLong(toks[2]) + Long.parseLong(toks[3]) + Long.parseLong(toks[5])
                     + Long.parseLong(toks[6]) + Long.parseLong(toks[7]) + Long.parseLong(toks[8]);
 
-            return (float)(cpu2 - cpu1) / ((cpu2 + idle2) - (cpu1 + idle1));
+            float raw_load = (float)(cpu2 - cpu1) / ((cpu2 + idle2) - (cpu1 + idle1));
+            return raw_load*100;
 
         } catch (IOException ex) {
             ex.printStackTrace();
         }
+
         return 0;
     }
 
@@ -138,6 +132,7 @@ public class TemperatureLoggerService extends Service{
             super(looper);
         }
 
+        @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
         @Override
         public void handleMessage(Message message){
             synchronized (this){
@@ -145,10 +140,13 @@ public class TemperatureLoggerService extends Service{
                     try {
                         Date currentTime = Calendar.getInstance().getTime();
                         String currentTimeString = dateFormat.format(currentTime);
-                        temperatureDatabase.insertEntry(currentTimeString, getBatteryTemperature(), getBatteryLevel(), getBatteryVoltage(), getBatteryCurrent());
-                        Log.i(TAG, "TemperatureLoggerService running! " + getBatteryTemperature() + " " +currentTimeString + " " +getBatteryLevel()+ " " +getBatteryVoltage()+ " " +getBatteryCurrent());
-                        Log.i(TAG, "CPU Usage:" + readUsage());
-                        Thread.sleep(1000);
+                        double battery_temp = getBatteryTemperature();
+                        double battery_level = getBatteryLevel();
+                        double battery_voltage = getBatteryVoltage();
+                        float cpu_load = getCPULoad();
+                        temperatureDatabase.insertEntry(currentTimeString, battery_temp, battery_level, battery_voltage, cpu_load);
+                        Log.i(TAG, "TemperatureLoggerService running! " +currentTimeString+ " " +battery_temp+ " " +battery_level+ " " +battery_voltage+ " " +cpu_load);
+                        Thread.sleep(475);
                     }
                     catch(Exception e){
                         Log.i(TAG, e.getMessage());

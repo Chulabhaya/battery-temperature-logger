@@ -19,6 +19,6 @@ public final class TemperatureContract {
         public static final String COLUMN_TEMPERATURE = "battery_temperature";
         public static final String COLUMN_LEVEL = "battery_level";
         public static final String COLUMN_VOLTAGE = "battery_voltage";
-        public static final String COLUMN_CURRENT = "battery_current";
+        public static final String COLUMN_CPU = "cpu_load";
     }
 }

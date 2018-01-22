@@ -14,13 +14,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 
-/**
- * Created by ckwij on 10/5/2017.
- */
-
 public class TemperatureDBHelper extends SQLiteOpenHelper{
-    public static final int DATABASE_VERSION = 1;
-    public static final String DATABASE_NAME = "BatteryTemperatures.db";
+    private static final int DATABASE_VERSION = 1;
+    static final String DATABASE_NAME = "BatteryTemperatures.db";
     private static final String SQL_CREATE_ENTRIES =
         "CREATE TABLE " + TemperatureContract.TemperatureEntry.TABLE_NAME + " (" +
         TemperatureContract.TemperatureEntry._ID + " INTEGER PRIMARY KEY," +
@@ -33,7 +29,7 @@ public class TemperatureDBHelper extends SQLiteOpenHelper{
     private static final String SQL_DELETE_ENTRIES =
         "DROP TABLE IF EXISTS " + TemperatureContract.TemperatureEntry.TABLE_NAME;
 
-    public TemperatureDBHelper(Context context){
+    TemperatureDBHelper(Context context){
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
         Log.d("Database operations", "Database created!");
     }
@@ -51,7 +47,7 @@ public class TemperatureDBHelper extends SQLiteOpenHelper{
         Log.d("Database operations", "Database upgraded!");
     }
 
-    public long insertEntry(String time, double temperature, double level, double voltage, float cpu_load){
+    long insertEntry(String time, double temperature, double level, double voltage, float cpu_load){
         SQLiteDatabase database = this.getWritableDatabase();
 
         ContentValues values = new ContentValues();
@@ -74,20 +70,20 @@ public class TemperatureDBHelper extends SQLiteOpenHelper{
         return res;
     }
 
-    public void clearDB(){
+    void clearDB(){
         SQLiteDatabase database = this.getWritableDatabase();
-        database.delete(TemperatureContract.TemperatureEntry.TABLE_NAME, null, null);
+        //database.delete(TemperatureContract.TemperatureEntry.TABLE_NAME, null, null);
+        database.execSQL("delete from "+ TemperatureContract.TemperatureEntry.TABLE_NAME);
     }
 
-    public void exportDB(Context context){
+    void exportDB(){
         File sd = Environment.getExternalStorageDirectory();
         File data = Environment.getDataDirectory();
-        FileChannel source = null;
-        FileChannel destination = null;
+        FileChannel source;
+        FileChannel destination;
         String currentDBPath = "/data/" + "com.chulabhaya.batterytemperaturelogger" + "/databases/" + DATABASE_NAME;
-        String backupDBPath = DATABASE_NAME;
         File currentDB = new File(data, currentDBPath);
-        File backupDB = new File(sd, backupDBPath);
+        File backupDB = new File(sd, DATABASE_NAME);
         try{
             source = new FileInputStream(currentDB).getChannel();
             destination = new FileOutputStream(backupDB).getChannel();

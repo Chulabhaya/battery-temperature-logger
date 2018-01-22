@@ -1,4 +1,5 @@
 package com.chulabhaya.batterytemperaturelogger;
+import android.annotation.SuppressLint;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -23,25 +24,21 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
-/**
- * Created by ckwij on 10/5/2017.
- */
-
 public class TemperatureLoggerService extends Service{
     private TemperatureDBHelper temperatureDatabase;
     private Context context;
     private static final String TAG = "TempLoggerService";
     private boolean isRunning = false;
-    private Looper looper;
     private TemperatureLoggerServiceHandler TemperatureLoggerServiceHandler;
     DecimalFormat decimalFormat = new DecimalFormat("0.00");
+    @SuppressLint("SimpleDateFormat")
     DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss");
 
     @Override
     public void onCreate(){
         HandlerThread handlerThread = new HandlerThread("TemperatureLoggerThread", Process.THREAD_PRIORITY_BACKGROUND);
         handlerThread.start();
-        looper = handlerThread.getLooper();
+        Looper looper = handlerThread.getLooper();
         TemperatureLoggerServiceHandler = new TemperatureLoggerServiceHandler(looper);
         isRunning = true;
         context = getApplicationContext();
@@ -68,28 +65,28 @@ public class TemperatureLoggerService extends Service{
     public void onDestroy(){
         isRunning = false;
         Toast.makeText(this, "Temperature logging stopped.", Toast.LENGTH_SHORT).show();
-        temperatureDatabase.exportDB(context);
+        temperatureDatabase.exportDB();
         temperatureDatabase.clearDB();
     }
 
     // Obtains battery temperature
     private double getBatteryTemperature(){
         Intent intent = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+        assert intent != null;
         double celsius = ((double)intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE,0)) / 10;
-        double fahrenheit = Double.valueOf(decimalFormat.format(((celsius * 9) / 5) + 32));
-        return fahrenheit;
+        return Double.valueOf(decimalFormat.format(((celsius * 9) / 5) + 32));
     }
 
     private double getBatteryLevel(){
         Intent intent = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-        double level = (double)intent.getIntExtra(BatteryManager.EXTRA_LEVEL,0);
-        return level;
+        assert intent != null;
+        return (double)intent.getIntExtra(BatteryManager.EXTRA_LEVEL,0);
     }
 
     private double getBatteryVoltage(){
         Intent intent = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-        double voltage = (double)intent.getIntExtra(BatteryManager.EXTRA_VOLTAGE,0);
-        return voltage;
+        assert intent != null;
+        return (double)intent.getIntExtra(BatteryManager.EXTRA_VOLTAGE,0);
     }
 
     private float getCPULoad() {
@@ -104,8 +101,10 @@ public class TemperatureLoggerService extends Service{
                     + Long.parseLong(toks[6]) + Long.parseLong(toks[7]) + Long.parseLong(toks[8]);
 
             try {
-                Thread.sleep(500);
-            } catch (Exception e) {}
+                Thread.sleep(400);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
             reader.seek(0);
             load = reader.readLine();
@@ -123,15 +122,15 @@ public class TemperatureLoggerService extends Service{
             }
             return raw_load*100;
 
-        } catch (IOException ex) {
-            ex.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
         return 0;
     }
 
     private final class TemperatureLoggerServiceHandler extends Handler{
-        public TemperatureLoggerServiceHandler(Looper looper){
+        TemperatureLoggerServiceHandler(Looper looper){
             super(looper);
         }
 
@@ -149,7 +148,7 @@ public class TemperatureLoggerService extends Service{
                         float cpu_load = getCPULoad();
                         temperatureDatabase.insertEntry(currentTimeString, battery_temp, battery_level, battery_voltage, cpu_load);
                         Log.i(TAG, "TemperatureLoggerService running! " +currentTimeString+ " " +battery_temp+ " " +battery_level+ " " +battery_voltage+ " " +cpu_load);
-                        Thread.sleep(475);
+                        Thread.sleep(600);
                     }
                     catch(Exception e){
                         Log.i(TAG, e.getMessage());

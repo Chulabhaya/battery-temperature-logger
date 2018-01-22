@@ -84,7 +84,7 @@ public class TemperatureDBHelper extends SQLiteOpenHelper{
         File data = Environment.getDataDirectory();
         FileChannel source = null;
         FileChannel destination = null;
-        String currentDBPath = "/data/" + "com.ckwijesundara.batterytemperaturetracker" + "/databases/" + DATABASE_NAME;
+        String currentDBPath = "/data/" + "com.chulabhaya.batterytemperaturelogger" + "/databases/" + DATABASE_NAME;
         String backupDBPath = DATABASE_NAME;
         File currentDB = new File(data, currentDBPath);
         File backupDB = new File(sd, backupDBPath);

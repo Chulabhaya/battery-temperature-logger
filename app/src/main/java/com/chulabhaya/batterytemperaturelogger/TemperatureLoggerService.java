@@ -118,6 +118,9 @@ public class TemperatureLoggerService extends Service{
                     + Long.parseLong(toks[6]) + Long.parseLong(toks[7]) + Long.parseLong(toks[8]);
 
             float raw_load = (float)(cpu2 - cpu1) / ((cpu2 + idle2) - (cpu1 + idle1));
+            if (Float.isNaN(raw_load)){
+                raw_load = (float)0.0;
+            }
             return raw_load*100;
 
         } catch (IOException ex) {

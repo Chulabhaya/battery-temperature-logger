@@ -72,8 +72,8 @@ public class TemperatureDBHelper extends SQLiteOpenHelper{
 
     void clearDB(){
         SQLiteDatabase database = this.getWritableDatabase();
-        //database.delete(TemperatureContract.TemperatureEntry.TABLE_NAME, null, null);
-        database.execSQL("delete from "+ TemperatureContract.TemperatureEntry.TABLE_NAME);
+        database.delete(TemperatureContract.TemperatureEntry.TABLE_NAME, null, null);
+        database.close();
     }
 
     void exportDB(){

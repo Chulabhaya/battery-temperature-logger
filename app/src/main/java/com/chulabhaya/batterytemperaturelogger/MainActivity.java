@@ -8,6 +8,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.TextView;
 
 import java.io.File;
 
@@ -18,11 +19,13 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        /* Obtains necessary permissions. */
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             requestPermissions(new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
             requestPermissions(new String[]{android.Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
         }
 
+        /* Implements functionality for the data logging buttons. */
         OnClickListener listenerLoggerButtons = new OnClickListener(){
             @Override
             public void onClick(View view){
@@ -41,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.startLogger).setOnClickListener(listenerLoggerButtons);
         findViewById(R.id.stopLogger).setOnClickListener(listenerLoggerButtons);
 
+        /* Implements functionality for the email data button. */
         OnClickListener listenerEmail = new OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -62,5 +66,22 @@ public class MainActivity extends AppCompatActivity {
         };
         findViewById(R.id.emailDB).setOnClickListener(listenerEmail);
 
+        /* Implements functionality for regex threads button, currently a WIP. */
+        OnClickListener listenerRegexThread = new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                /* Run 10 threads for 120 seconds */
+                int NUM_THREADS = 10, RUNNING_TIME = 120;
+                for(int i = 0; i < 2; ++i){
+                    new RegexThread();
+                }
+                try {
+                    Thread.sleep(1000*RUNNING_TIME);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        findViewById(R.id.startRegex).setOnClickListener(listenerRegexThread);
     }
 }

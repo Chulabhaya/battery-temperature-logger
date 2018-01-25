@@ -27,12 +27,12 @@ import java.util.Date;
 public class TemperatureLoggerService extends Service{
     private TemperatureDBHelper temperatureDatabase;
     private Context context;
-    private static final String TAG = "TempLoggerService";
+    public static final String TAG = "TempLoggerService";
     private boolean isRunning = false;
     private TemperatureLoggerServiceHandler TemperatureLoggerServiceHandler;
     DecimalFormat decimalFormat = new DecimalFormat("0.00");
     @SuppressLint("SimpleDateFormat")
-    DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy hh:mm:ss");
+    DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
 
     @Override
     public void onCreate(){
@@ -69,26 +69,29 @@ public class TemperatureLoggerService extends Service{
         temperatureDatabase.clearDB();
     }
 
-    // Obtains battery temperature
-    private double getBatteryTemperature(){
+    /* Calculates and returns battery temperature. */
+    public double getBatteryTemperature(){
         Intent intent = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         assert intent != null;
         double celsius = ((double)intent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE,0)) / 10;
         return Double.valueOf(decimalFormat.format(((celsius * 9) / 5) + 32));
     }
 
+    /* Returns battery level. */
     private double getBatteryLevel(){
         Intent intent = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         assert intent != null;
         return (double)intent.getIntExtra(BatteryManager.EXTRA_LEVEL,0);
     }
 
+    /* Returns battery voltage. */
     private double getBatteryVoltage(){
         Intent intent = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         assert intent != null;
         return (double)intent.getIntExtra(BatteryManager.EXTRA_VOLTAGE,0);
     }
 
+    /* Calculates and returns the CPU usage. */
     private float getCPULoad() {
         try {
             RandomAccessFile reader = new RandomAccessFile("/proc/stat", "r");
@@ -116,7 +119,7 @@ public class TemperatureLoggerService extends Service{
             long cpu2 = Long.parseLong(toks[2]) + Long.parseLong(toks[3]) + Long.parseLong(toks[5])
                     + Long.parseLong(toks[6]) + Long.parseLong(toks[7]) + Long.parseLong(toks[8]);
 
-            float raw_load = (float)(cpu2 - cpu1) / ((cpu2 + idle2) - (cpu1 + idle1));
+            float raw_load = (float)(Math.abs(cpu2 - cpu1)) / Math.abs((cpu2 + idle2) - (cpu1 + idle1));
             if (Float.isNaN(raw_load)){
                 raw_load = (float)0.0;
             }

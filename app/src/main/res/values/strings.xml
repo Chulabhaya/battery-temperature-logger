@@ -3,5 +3,4 @@
     <string name="button_email_data">Email Data</string>
     <string name="button_start_logging">Start Logging Data</string>
     <string name="button_stop_logging">Stop Logging Data</string>
-    <string name="button_start_regex_threads">Start Regex Threads</string>
 </resources>

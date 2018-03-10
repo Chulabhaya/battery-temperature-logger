@@ -24,6 +24,7 @@ public class TemperatureDBHelper extends SQLiteOpenHelper{
         TemperatureContract.TemperatureEntry.COLUMN_TEMPERATURE + " REAL," +
         TemperatureContract.TemperatureEntry.COLUMN_LEVEL + " REAL," +
         TemperatureContract.TemperatureEntry.COLUMN_VOLTAGE + " REAL," +
+        TemperatureContract.TemperatureEntry.COLUMN_CURRENT + " REAL," +
         TemperatureContract.TemperatureEntry.COLUMN_CPU + " REAL)";
 
     private static final String SQL_DELETE_ENTRIES =
@@ -47,7 +48,7 @@ public class TemperatureDBHelper extends SQLiteOpenHelper{
         Log.d("Database operations", "Database upgraded!");
     }
 
-    long insertEntry(String time, double temperature, double level, double voltage, float cpu_load){
+    long insertEntry(String time, double temperature, double level, double voltage, double current, float cpu_load){
         SQLiteDatabase database = this.getWritableDatabase();
 
         ContentValues values = new ContentValues();
@@ -55,6 +56,7 @@ public class TemperatureDBHelper extends SQLiteOpenHelper{
         values.put(TemperatureContract.TemperatureEntry.COLUMN_TEMPERATURE, temperature);
         values.put(TemperatureContract.TemperatureEntry.COLUMN_LEVEL, level);
         values.put(TemperatureContract.TemperatureEntry.COLUMN_VOLTAGE, voltage);
+        values.put(TemperatureContract.TemperatureEntry.COLUMN_CURRENT, current);
         values.put(TemperatureContract.TemperatureEntry.COLUMN_CPU, cpu_load);
         long newRowId = database.insert(TemperatureContract.TemperatureEntry.TABLE_NAME, null, values);
 

@@ -91,6 +91,13 @@ public class TemperatureLoggerService extends Service{
         return (double)intent.getIntExtra(BatteryManager.EXTRA_VOLTAGE,0);
     }
 
+    /* Returns instantaneous battery current. */
+    private double getBatteryCurrent(){
+        BatteryManager batteryManager = (BatteryManager) getSystemService(BATTERY_SERVICE);
+        assert batteryManager != null;
+        return (double)batteryManager.getLongProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW);
+    }
+
     /* Calculates and returns the CPU usage. */
     private float getCPULoad() {
         try {
@@ -148,10 +155,11 @@ public class TemperatureLoggerService extends Service{
                         double battery_temp = getBatteryTemperature();
                         double battery_level = getBatteryLevel();
                         double battery_voltage = getBatteryVoltage();
+                        double battery_current = getBatteryCurrent();
                         float cpu_load = getCPULoad();
-                        temperatureDatabase.insertEntry(currentTimeString, battery_temp, battery_level, battery_voltage, cpu_load);
-                        Log.i(TAG, "TemperatureLoggerService running! " +currentTimeString+ " " +battery_temp+ " " +battery_level+ " " +battery_voltage+ " " +cpu_load);
-                        Thread.sleep(600);
+                        temperatureDatabase.insertEntry(currentTimeString, battery_temp, battery_level, battery_voltage, battery_current, cpu_load);
+                        Log.i(TAG, "TemperatureLoggerService running! " +currentTimeString+ " " +battery_temp+ " " +battery_level+ " " +battery_voltage+ " " +battery_current+ " " +cpu_load);
+                        Thread.sleep(300);
                     }
                     catch(Exception e){
                         Log.i(TAG, e.getMessage());

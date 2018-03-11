@@ -1,5 +1,6 @@
 package com.chulabhaya.batterytemperaturelogger;
 import android.annotation.SuppressLint;
+import android.app.ActivityManager;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -31,6 +32,7 @@ public class TemperatureLoggerService extends Service{
     private boolean isRunning = false;
     private TemperatureLoggerServiceHandler TemperatureLoggerServiceHandler;
     DecimalFormat decimalFormat = new DecimalFormat("0.00");
+    DecimalFormat decimalFormat2 = new DecimalFormat("0.0000");
     @SuppressLint("SimpleDateFormat")
     DateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
 
@@ -89,7 +91,7 @@ public class TemperatureLoggerService extends Service{
         Intent intent = context.registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
         assert intent != null;
         double batteryVoltage = (double)intent.getIntExtra(BatteryManager.EXTRA_VOLTAGE,0);
-        batteryVoltage = batteryVoltage / 1000;     /* Convert from millivolts to volts. */
+        batteryVoltage = Double.valueOf(decimalFormat2.format(batteryVoltage / 1000));     /* Convert from millivolts to volts. */
         return batteryVoltage;
     }
 
@@ -98,8 +100,19 @@ public class TemperatureLoggerService extends Service{
         BatteryManager batteryManager = (BatteryManager) getSystemService(BATTERY_SERVICE);
         assert batteryManager != null;
         double batteryCurrent = (double)batteryManager.getLongProperty(BatteryManager.BATTERY_PROPERTY_CURRENT_NOW);
-        batteryCurrent = batteryCurrent*Math.pow(10, -6);   /* Convert from microamps to amps. */
+        batteryCurrent = Double.valueOf(decimalFormat2.format(batteryCurrent*Math.pow(10, -6)));   /* Convert from microamps to amps. */
         return batteryCurrent;
+    }
+
+    /* Returns available memory as a percent value. */
+    private double getAvailMemory(){
+        ActivityManager.MemoryInfo memoryInfo = new ActivityManager.MemoryInfo();
+        ActivityManager activityManager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+        assert activityManager != null;
+        activityManager.getMemoryInfo(memoryInfo);
+        double availPercent;
+        availPercent = Double.valueOf(decimalFormat2.format(memoryInfo.availMem / (double)memoryInfo.totalMem * 100.0));
+        return availPercent;
     }
 
     /* Calculates and returns the CPU usage. */
@@ -134,7 +147,7 @@ public class TemperatureLoggerService extends Service{
             if (Float.isNaN(raw_load)){
                 raw_load = (float)0.0;
             }
-            return raw_load*100;
+            return Float.valueOf(decimalFormat2.format(raw_load*100));
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -160,10 +173,12 @@ public class TemperatureLoggerService extends Service{
                         double battery_level = getBatteryLevel();
                         double battery_voltage = getBatteryVoltage();
                         double battery_current = getBatteryCurrent();
+                        double avail_memory = getAvailMemory();
                         float cpu_load = getCPULoad();
-                        temperatureDatabase.insertEntry(currentTimeString, battery_temp, battery_level, battery_voltage, battery_current, cpu_load);
-                        Log.i(TAG, "TemperatureLoggerService running! " +currentTimeString+ " " +battery_temp+ " " +battery_level+ " " +battery_voltage+ " " +battery_current+ " " +cpu_load);
-                        Thread.sleep(400);
+                        temperatureDatabase.insertEntry(currentTimeString, battery_temp, battery_level, battery_voltage, battery_current, avail_memory, cpu_load);
+                        Log.i(TAG, "TemperatureLoggerService running! " +currentTimeString+ " " +battery_temp+ " " +battery_level+ " "
+                                +battery_voltage+ " " +battery_current+ " " +avail_memory+ " " +cpu_load);
+                        Thread.sleep(500);
                     }
                     catch(Exception e){
                         Log.i(TAG, e.getMessage());

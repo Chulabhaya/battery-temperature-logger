@@ -1,9 +1,15 @@
 package com.chulabhaya.batterytemperaturelogger;
 
+import android.app.AppOpsManager;
+import android.app.Application;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
+import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -22,6 +28,13 @@ public class MainActivity extends AppCompatActivity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             requestPermissions(new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
             requestPermissions(new String[]{android.Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
+            requestPermissions(new String[]{android.Manifest.permission.READ_PHONE_STATE}, 1);
+        }
+
+        /* Obtains further permissions needed for NetworkStatsManager. */
+        if (!usageAccessGranted()){
+            Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
+            startActivity(intent);
         }
 
         /* Implements functionality for the data logging buttons. */
@@ -64,5 +77,21 @@ public class MainActivity extends AppCompatActivity {
             }
         };
         findViewById(R.id.emailDB).setOnClickListener(listenerEmail);
+    }
+
+    /* Check to see if usage access permission has been granted by user. */
+    private boolean usageAccessGranted(){
+        try{
+            PackageManager packageManager = getPackageManager();
+            ApplicationInfo applicationInfo = packageManager.getApplicationInfo(getPackageName(), 0);
+            AppOpsManager appOpsManager = (AppOpsManager) getSystemService(Context.APP_OPS_SERVICE);
+            int mode = 0;
+            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT){
+                mode = appOpsManager.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, applicationInfo.uid, applicationInfo.packageName);
+            }
+            return (mode == AppOpsManager.MODE_ALLOWED);
+        }catch (PackageManager.NameNotFoundException e){
+            return false;
+        }
     }
 }

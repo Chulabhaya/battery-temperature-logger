@@ -2,9 +2,12 @@ package com.chulabhaya.batterytemperaturelogger;
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
 import android.app.Service;
+import android.app.usage.NetworkStats;
+import android.app.usage.NetworkStatsManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.net.ConnectivityManager;
 import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Handler;
@@ -13,6 +16,7 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
 import android.os.Process;
+import android.os.RemoteException;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
 import android.widget.Toast;
@@ -115,6 +119,21 @@ public class TemperatureLoggerService extends Service{
         return availPercent;
     }
 
+    /* Get network usage for WiFi. */
+    private long getWiFiUsage(){
+        long startTime = 0;
+        long endTime = System.currentTimeMillis();
+        NetworkStatsManager networkStatsManager = (NetworkStatsManager) getSystemService(NETWORK_STATS_SERVICE);
+        NetworkStats.Bucket bucket;
+        try{
+            assert networkStatsManager != null;
+            bucket = networkStatsManager.querySummaryForDevice(ConnectivityManager.TYPE_WIFI, "", startTime, endTime);
+        }catch (RemoteException e){
+            return -1;
+        }
+        return (bucket.getRxBytes() + bucket.getTxBytes());
+    }
+
     /* Calculates and returns the CPU usage. */
     private float getCPULoad() {
         try {
@@ -174,10 +193,11 @@ public class TemperatureLoggerService extends Service{
                         double battery_voltage = getBatteryVoltage();
                         double battery_current = getBatteryCurrent();
                         double avail_memory = getAvailMemory();
+                        long wifi_rx = getWiFiUsage();
                         float cpu_load = getCPULoad();
                         temperatureDatabase.insertEntry(currentTimeString, battery_temp, battery_level, battery_voltage, battery_current, avail_memory, cpu_load);
                         Log.i(TAG, "TemperatureLoggerService running! " +currentTimeString+ " " +battery_temp+ " " +battery_level+ " "
-                                +battery_voltage+ " " +battery_current+ " " +avail_memory+ " " +cpu_load);
+                                +battery_voltage+ " " +battery_current+ " " +avail_memory+ " " +cpu_load + " " +wifi_rx);
                         Thread.sleep(500);
                     }
                     catch(Exception e){

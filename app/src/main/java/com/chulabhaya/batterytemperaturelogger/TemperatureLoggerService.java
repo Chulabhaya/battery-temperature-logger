@@ -35,6 +35,8 @@ public class TemperatureLoggerService extends Service{
     public static final String TAG = "TempLoggerService";
     private boolean isRunning = false;
     private TemperatureLoggerServiceHandler TemperatureLoggerServiceHandler;
+
+    /* Date and time formatting related things. */
     DecimalFormat decimalFormat = new DecimalFormat("0.00");
     DecimalFormat decimalFormat2 = new DecimalFormat("0.0000");
     @SuppressLint("SimpleDateFormat")
@@ -131,7 +133,7 @@ public class TemperatureLoggerService extends Service{
         }catch (RemoteException e){
             return -1;
         }
-        return (bucket.getRxBytes() + bucket.getTxBytes());
+        return (bucket.getRxPackets() + bucket.getTxPackets());
     }
 
     /* Calculates and returns the CPU usage. */
@@ -195,10 +197,10 @@ public class TemperatureLoggerService extends Service{
                         double avail_memory = getAvailMemory();
                         long wifi_rx = getWiFiUsage();
                         float cpu_load = getCPULoad();
+                        Thread.sleep(500);
                         temperatureDatabase.insertEntry(currentTimeString, battery_temp, battery_level, battery_voltage, battery_current, avail_memory, cpu_load);
                         Log.i(TAG, "TemperatureLoggerService running! " +currentTimeString+ " " +battery_temp+ " " +battery_level+ " "
                                 +battery_voltage+ " " +battery_current+ " " +avail_memory+ " " +cpu_load + " " +wifi_rx);
-                        Thread.sleep(500);
                     }
                     catch(Exception e){
                         Log.i(TAG, e.getMessage());

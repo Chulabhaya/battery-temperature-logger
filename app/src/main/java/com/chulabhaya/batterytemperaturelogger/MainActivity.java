@@ -1,5 +1,6 @@
 package com.chulabhaya.batterytemperaturelogger;
 
+import android.Manifest;
 import android.app.AppOpsManager;
 import android.app.Application;
 import android.content.Context;
@@ -10,6 +11,8 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.provider.Settings;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -25,10 +28,13 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         /* Obtains necessary permissions. */
+        String[] permissions = {Manifest.permission.READ_PHONE_STATE, Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE};
+        String[] permissionNames = {"READ_PHONE_STATE", "WRITE_EXTERNAL_STORAGE", "READ_EXTERNAL_STORAGE"};
+        int permissionsCode = 1;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            requestPermissions(new String[]{android.Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1);
-            requestPermissions(new String[]{android.Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
-            requestPermissions(new String[]{android.Manifest.permission.READ_PHONE_STATE}, 1);
+            if (!permissionsGranted(permissionNames)){
+                ActivityCompat.requestPermissions(this, permissions, permissionsCode);
+            }
         }
 
         /* Obtains further permissions needed for NetworkStatsManager. */
@@ -93,5 +99,14 @@ public class MainActivity extends AppCompatActivity {
         }catch (PackageManager.NameNotFoundException e){
             return false;
         }
+    }
+
+    /* Check to see if other permissions have been granted. */
+    private boolean permissionsGranted(String[] permissionNames){
+        boolean permissionsGranted = true;
+        for (String permission: permissionNames){
+            permissionsGranted = permissionsGranted && (ContextCompat.checkSelfPermission(getApplicationContext(), permission) == PackageManager.PERMISSION_GRANTED);
+        }
+        return permissionsGranted;
     }
 }

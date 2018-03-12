@@ -26,14 +26,15 @@ public class TemperatureDBHelper extends SQLiteOpenHelper{
         TemperatureContract.TemperatureEntry.COLUMN_VOLTAGE + " REAL," +
         TemperatureContract.TemperatureEntry.COLUMN_CURRENT + " REAL," +
         TemperatureContract.TemperatureEntry.COLUMN_MEMORY + " REAL," +
-        TemperatureContract.TemperatureEntry.COLUMN_CPU + " REAL)";
+        TemperatureContract.TemperatureEntry.COLUMN_CPU + " REAL," +
+        TemperatureContract.TemperatureEntry.COLUMN_WIFI_USAGE + " REAL," +
+        TemperatureContract.TemperatureEntry.COLUMN_DATA_USAGE + " REAL)";
 
     private static final String SQL_DELETE_ENTRIES =
         "DROP TABLE IF EXISTS " + TemperatureContract.TemperatureEntry.TABLE_NAME;
 
     TemperatureDBHelper(Context context){
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
-        Log.d("Database operations", "Database created!");
     }
 
     public void onCreate(SQLiteDatabase db){
@@ -49,7 +50,7 @@ public class TemperatureDBHelper extends SQLiteOpenHelper{
         Log.d("Database operations", "Database upgraded!");
     }
 
-    long insertEntry(String time, double temperature, double level, double voltage, double current, double memory, float cpu_load){
+    long insertEntry(String time, double temperature, double level, double voltage, double current, double memory, float cpu_load, long wifi_usage, long data_usage){
         SQLiteDatabase database = this.getWritableDatabase();
 
         ContentValues values = new ContentValues();
@@ -60,6 +61,8 @@ public class TemperatureDBHelper extends SQLiteOpenHelper{
         values.put(TemperatureContract.TemperatureEntry.COLUMN_CURRENT, current);
         values.put(TemperatureContract.TemperatureEntry.COLUMN_MEMORY, memory);
         values.put(TemperatureContract.TemperatureEntry.COLUMN_CPU, cpu_load);
+        values.put(TemperatureContract.TemperatureEntry.COLUMN_WIFI_USAGE, wifi_usage);
+        values.put(TemperatureContract.TemperatureEntry.COLUMN_DATA_USAGE, data_usage);
         long newRowId = database.insert(TemperatureContract.TemperatureEntry.TABLE_NAME, null, values);
 
         Log.d("Database operations", "Row inserted!");

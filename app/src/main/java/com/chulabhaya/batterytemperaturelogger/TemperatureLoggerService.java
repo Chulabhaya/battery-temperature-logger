@@ -18,6 +18,7 @@ import android.os.Message;
 import android.os.Process;
 import android.os.RemoteException;
 import android.support.annotation.RequiresApi;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -58,7 +59,7 @@ public class TemperatureLoggerService extends Service{
         Message message = TemperatureLoggerServiceHandler.obtainMessage();
         message.arg1 = startId;
         TemperatureLoggerServiceHandler.sendMessage(message);
-        Toast.makeText(this, "Temperature logging started.", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Data logging started.", Toast.LENGTH_SHORT).show();
 
         // If service is killed while starting, it restarts
         return START_STICKY;
@@ -72,7 +73,7 @@ public class TemperatureLoggerService extends Service{
     @Override
     public void onDestroy(){
         isRunning = false;
-        Toast.makeText(this, "Temperature logging stopped.", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Data logging stopped.", Toast.LENGTH_SHORT).show();
         temperatureDatabase.exportDB();
         temperatureDatabase.clearDB();
     }
@@ -122,7 +123,7 @@ public class TemperatureLoggerService extends Service{
     }
 
     /* Get network usage for WiFi. */
-    private long getWiFiUsage(){
+    private long getWiFiUsage(long previousUsage){
         long startTime = 0;
         long endTime = System.currentTimeMillis();
         NetworkStatsManager networkStatsManager = (NetworkStatsManager) getSystemService(NETWORK_STATS_SERVICE);
@@ -133,7 +134,33 @@ public class TemperatureLoggerService extends Service{
         }catch (RemoteException e){
             return -1;
         }
-        return (bucket.getRxPackets() + bucket.getTxPackets());
+        long currentUsage = bucket.getRxPackets() + bucket.getTxPackets();
+        return currentUsage - previousUsage;
+    }
+
+    /* Functions related to getting network usage for mobile data. */
+    private long getDataUsage(long previousUsage){
+        long startTime = 0;
+        long endTime = System.currentTimeMillis();
+        NetworkStatsManager networkStatsManager = (NetworkStatsManager) getSystemService(NETWORK_STATS_SERVICE);
+        NetworkStats.Bucket bucket;
+        try{
+            assert networkStatsManager != null;
+            bucket = networkStatsManager.querySummaryForDevice(ConnectivityManager.TYPE_MOBILE, getSubscriberId(ConnectivityManager.TYPE_MOBILE), startTime, endTime);
+        }catch (RemoteException e){
+            return -1;
+        }
+        long currentUsage = bucket.getRxPackets() + bucket.getTxPackets();
+        return currentUsage - previousUsage;
+    }
+    @SuppressLint("MissingPermission")
+    private String getSubscriberId(int networkType){
+        if (ConnectivityManager.TYPE_MOBILE == networkType){
+            TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+            assert telephonyManager != null;
+            return telephonyManager.getSubscriberId();
+        }
+        return "";
     }
 
     /* Calculates and returns the CPU usage. */
@@ -194,13 +221,17 @@ public class TemperatureLoggerService extends Service{
                         double battery_level = getBatteryLevel();
                         double battery_voltage = getBatteryVoltage();
                         double battery_current = getBatteryCurrent();
-                        double avail_memory = getAvailMemory();
-                        long wifi_rx = getWiFiUsage();
+                        double available_memory = getAvailMemory();
+                        long wifiUsagePrevious = getWiFiUsage(0);
+                        long dataUsagePrevious = getDataUsage(0);
                         float cpu_load = getCPULoad();
                         Thread.sleep(500);
-                        temperatureDatabase.insertEntry(currentTimeString, battery_temp, battery_level, battery_voltage, battery_current, avail_memory, cpu_load);
+                        long wifiUsageCurrent = getWiFiUsage(wifiUsagePrevious);
+                        long dataUsageCurrent = getDataUsage(dataUsagePrevious);
+                        temperatureDatabase.insertEntry(currentTimeString, battery_temp, battery_level,
+                                battery_voltage, battery_current, available_memory, cpu_load, wifiUsageCurrent, dataUsageCurrent);
                         Log.i(TAG, "TemperatureLoggerService running! " +currentTimeString+ " " +battery_temp+ " " +battery_level+ " "
-                                +battery_voltage+ " " +battery_current+ " " +avail_memory+ " " +cpu_load + " " +wifi_rx);
+                                +battery_voltage+ " " +battery_current+ " " +available_memory+ " " +cpu_load + " " +wifiUsageCurrent+ " " +dataUsageCurrent);
                     }
                     catch(Exception e){
                         Log.i(TAG, e.getMessage());

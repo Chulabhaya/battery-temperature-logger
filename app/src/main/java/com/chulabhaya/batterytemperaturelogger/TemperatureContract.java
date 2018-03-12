@@ -16,7 +16,9 @@ final class TemperatureContract {
         static final String COLUMN_LEVEL = "battery_level";
         static final String COLUMN_VOLTAGE = "battery_voltage";
         static final String COLUMN_CURRENT = "battery_current";
-        static final String COLUMN_MEMORY = "avail_memory";
-        static final String COLUMN_CPU = "cpu_load";
+        static final String COLUMN_MEMORY = "available_memory";
+        static final String COLUMN_CPU = "cpu_usage";
+        static final String COLUMN_WIFI_USAGE = "wifi_usage";
+        static final String COLUMN_DATA_USAGE = "data_usage";
     }
 }

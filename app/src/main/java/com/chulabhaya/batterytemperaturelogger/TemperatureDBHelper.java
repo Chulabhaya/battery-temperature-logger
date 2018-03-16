@@ -50,7 +50,7 @@ public class TemperatureDBHelper extends SQLiteOpenHelper{
         Log.d("Database operations", "Database upgraded!");
     }
 
-    long insertEntry(String time, double temperature, double level, double voltage, double current, double memory, float cpu_load, long wifi_usage, long data_usage){
+    long insertEntry(String time, double temperature, double level, double voltage, double current, double memory, double cpu_load, long wifi_usage, long data_usage){
         SQLiteDatabase database = this.getWritableDatabase();
 
         ContentValues values = new ContentValues();

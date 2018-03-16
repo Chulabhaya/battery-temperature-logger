@@ -2,7 +2,6 @@ package com.chulabhaya.batterytemperaturelogger;
 
 import android.Manifest;
 import android.app.AppOpsManager;
-import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
@@ -93,6 +92,7 @@ public class MainActivity extends AppCompatActivity {
             AppOpsManager appOpsManager = (AppOpsManager) getSystemService(Context.APP_OPS_SERVICE);
             int mode = 0;
             if (Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT){
+                assert appOpsManager != null;
                 mode = appOpsManager.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS, applicationInfo.uid, applicationInfo.packageName);
             }
             return (mode == AppOpsManager.MODE_ALLOWED);

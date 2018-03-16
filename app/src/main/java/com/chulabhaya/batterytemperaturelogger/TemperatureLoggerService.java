@@ -164,7 +164,7 @@ public class TemperatureLoggerService extends Service{
     }
 
     /* Calculates and returns the CPU usage. */
-    private float getCPULoad() {
+    private double getCPULoad() {
         try {
             RandomAccessFile reader = new RandomAccessFile("/proc/stat", "r");
             String load = reader.readLine();
@@ -191,11 +191,15 @@ public class TemperatureLoggerService extends Service{
             long cpu2 = Long.parseLong(toks[2]) + Long.parseLong(toks[3]) + Long.parseLong(toks[5])
                     + Long.parseLong(toks[6]) + Long.parseLong(toks[7]) + Long.parseLong(toks[8]);
 
-            float raw_load = (float)(Math.abs(cpu2 - cpu1)) / Math.abs((cpu2 + idle2) - (cpu1 + idle1));
-            if (Float.isNaN(raw_load)){
-                raw_load = (float)0.0;
+            double raw_load = (double)(Math.abs(cpu2 - cpu1)) / Math.abs((cpu2 + idle2) - (cpu1 + idle1));
+            if (Double.isNaN(raw_load)){
+                raw_load = 0.0;
             }
-            return Float.valueOf(decimalFormat2.format(raw_load*100));
+            raw_load = Double.valueOf(decimalFormat2.format(raw_load*100));
+            if (raw_load > 100){
+                raw_load = 100.0;
+            }
+            return raw_load;
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -224,7 +228,7 @@ public class TemperatureLoggerService extends Service{
                         double available_memory = getAvailMemory();
                         long wifiUsagePrevious = getWiFiUsage(0);
                         long dataUsagePrevious = getDataUsage(0);
-                        float cpu_load = getCPULoad();
+                        double cpu_load = getCPULoad();
                         Thread.sleep(500);
                         long wifiUsageCurrent = getWiFiUsage(wifiUsagePrevious);
                         long dataUsageCurrent = getDataUsage(dataUsagePrevious);
